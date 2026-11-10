@@ -4,6 +4,13 @@ import { AdminCard } from "@/components/admin/ui";
 import { ActionForm } from "@/components/ui/ActionForm";
 import { Pagination } from "@/components/admin/Pagination";
 import { MessageReplyForm } from "@/components/admin/MessageReplyForm";
+import {
+  DeleteMessageButton,
+  MessageSelectCheckbox,
+  MessageSelectionProvider,
+  MessagesBulkBar,
+} from "@/components/admin/MessageSelection";
+import { redirect } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 export default async function AdminMessagesPage({
@@ -14,6 +21,12 @@ export default async function AdminMessagesPage({
   const params = await searchParams;
   const page = Number(params.page ?? "1") || 1;
   const { rows: messages, total, unread, totalPages } = await getContactMessages(page);
+
+  // After deleting everything on the last page, step back instead of showing
+  // an empty page.
+  if (messages.length === 0 && page > 1 && total > 0) {
+    redirect(`/admin/messages?page=${totalPages}`);
+  }
 
   return (
     <div className="space-y-6">
@@ -46,6 +59,8 @@ export default async function AdminMessagesPage({
         {messages.length === 0 ? (
           <p className="text-sm text-ink-700">No messages yet.</p>
         ) : (
+          <MessageSelectionProvider ids={messages.map((m) => m.id)}>
+          <MessagesBulkBar />
           <div className="space-y-3">
             {messages.map((m) => {
               const isUnread = m.readAt === null;
@@ -58,6 +73,8 @@ export default async function AdminMessagesPage({
                   )}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="flex items-start gap-3">
+                    <MessageSelectCheckbox id={m.id} label={m.name} />
                     <div>
                       <p className="flex items-center gap-2 font-medium text-ink-950">
                         {isUnread ? <span aria-hidden="true" className="h-2 w-2 rounded-full bg-wine-900" /> : null}
@@ -74,6 +91,7 @@ export default async function AdminMessagesPage({
                         </a>
                         {m.phone ? <> &middot; {m.phone}</> : null}
                       </p>
+                    </div>
                     </div>
                     <p className="text-xs text-ink-700">
                       {new Date(m.createdAt).toLocaleString("en-NG", {
@@ -117,11 +135,13 @@ export default async function AdminMessagesPage({
                         {isUnread ? "Mark as read" : "Mark as unread"}
                       </button>
                     </ActionForm>
+                    <DeleteMessageButton id={m.id} />
                   </div>
                 </div>
               );
             })}
           </div>
+          </MessageSelectionProvider>
         )}
 
         <Pagination page={page} totalPages={totalPages} total={total} basePath="/admin/messages" searchParams={params} pageSize={CONTACT_MESSAGES_PAGE_SIZE} noun="message" />

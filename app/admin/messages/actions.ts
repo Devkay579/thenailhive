@@ -6,6 +6,35 @@ import { createClient } from "@/lib/supabase/server";
 import { sendContactReplyEmail } from "@/lib/email/send";
 
 const MAX_REPLY_LENGTH = 5000;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Permanently deletes one or more contact messages (their replies go with
+ * them via ON DELETE CASCADE). Used by both the per-message and bulk delete. */
+export async function deleteMessages(ids: string[]) {
+  const validIds = [...new Set(ids)].filter((id) => UUID_RE.test(id));
+  if (validIds.length === 0) return { ok: false, message: "Select at least one message." };
+
+  const sessionClient = await createClient();
+  const {
+    data: { user },
+  } = await sessionClient.auth.getUser();
+  if (!user) return { ok: false, message: "You're not signed in." };
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("contact_messages").delete().in("id", validIds);
+  if (error) {
+    console.error("Deleting contact messages failed:", error);
+    return {
+      ok: false,
+      message: validIds.length === 1
+        ? "We couldn't delete this message. Please try again."
+        : "We couldn't delete those messages. Please try again.",
+    };
+  }
+
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
 
 /** Emails a reply to the person who sent a Contact page message, records it
  * so the inbox shows the conversation, and marks the message read. */
