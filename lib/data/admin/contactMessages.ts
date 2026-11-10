@@ -11,7 +11,42 @@ export type ContactMessageRow = {
   message: string;
   createdAt: string;
   readAt: string | null;
+  replies: ContactMessageReply[];
 };
+
+export type ContactMessageReply = {
+  id: string;
+  body: string;
+  sentBy: string | null;
+  createdAt: string;
+};
+
+/** Replies for the given messages, grouped by message id. Fetched separately
+ * (not embedded) so a missing replies table -- migration not applied yet --
+ * only hides history instead of breaking the inbox. */
+async function getRepliesByMessage(messageIds: string[]): Promise<Map<string, ContactMessageReply[]>> {
+  const byMessage = new Map<string, ContactMessageReply[]>();
+  if (messageIds.length === 0) return byMessage;
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("contact_message_replies")
+    .select("id, message_id, body, sent_by, created_at")
+    .in("message_id", messageIds)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Failed to load contact message replies", error);
+    return byMessage;
+  }
+
+  for (const r of data ?? []) {
+    const list = byMessage.get(r.message_id) ?? [];
+    list.push({ id: r.id, body: r.body, sentBy: r.sent_by, createdAt: r.created_at });
+    byMessage.set(r.message_id, list);
+  }
+  return byMessage;
+}
 
 export type ContactMessagesPage = {
   rows: ContactMessageRow[];
@@ -41,8 +76,10 @@ export async function getContactMessages(page = 1): Promise<ContactMessagesPage>
   if (error) throw error;
 
   const total = count ?? 0;
+  const replies = await getRepliesByMessage((data ?? []).map((m) => m.id));
   return {
     rows: (data ?? []).map((m) => ({
+      replies: replies.get(m.id) ?? [],
       id: m.id,
       name: m.name,
       email: m.email,

@@ -298,6 +298,22 @@ alter table contact_messages add column if not exists read_at timestamptz;
 create index if not exists contact_messages_unread_idx on contact_messages (created_at desc)
   where read_at is null;
 
+-- Replies sent from the admin Messages inbox. Each one is emailed to the
+-- person who wrote in; kept here so the admin sees the conversation history.
+-- Written via the service-role client only, so RLS with no policies.
+create table if not exists contact_message_replies (
+  id uuid primary key default gen_random_uuid(),
+  message_id uuid not null references contact_messages(id) on delete cascade,
+  body text not null,
+  sent_by text,
+  created_at timestamptz not null default now()
+);
+
+alter table contact_message_replies enable row level security;
+
+create index if not exists contact_message_replies_message_idx
+  on contact_message_replies (message_id, created_at);
+
 -- ---------------------------------------------------------------------------
 -- Removal + new set in one appointment. A removal booking can name the
 -- service done straight after it; the booking's price, deposit and time

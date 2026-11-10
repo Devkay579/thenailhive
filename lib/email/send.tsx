@@ -17,7 +17,8 @@ import { BookingConfirmedEmail } from "./templates/BookingConfirmed";
 import { BookingReminderEmail } from "./templates/BookingReminder";
 import { ContactNotificationEmail } from "./templates/ContactNotification";
 import { ContactReceivedEmail } from "./templates/ContactReceived";
-import type { BookingEmailProps, ContactMessageProps } from "./templates/types";
+import { ContactReplyEmail } from "./templates/ContactReply";
+import type { BookingEmailProps, ContactMessageProps, ContactReplyProps } from "./templates/types";
 
 export type SendResult =
   | { skipped: true; reason: string }
@@ -193,6 +194,12 @@ export async function sendContactMessageEmails(
     send(props.email, "We've received your message — THENAILHIVE", <ContactReceivedEmail {...props} />),
   ]);
   return { notify, autoReply };
+}
+
+/** Emails an admin's reply (from the Messages inbox) to whoever sent a
+ * Contact page message. Their reply-to lands in the business inbox. */
+export async function sendContactReplyEmail(to: string, props: ContactReplyProps): Promise<SendResult> {
+  return send(to, "Re: your message to THENAILHIVE", <ContactReplyEmail {...props} />);
 }
 
 /** Sends reminder emails for every confirmed/deposit-paid booking tomorrow.

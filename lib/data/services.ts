@@ -155,7 +155,7 @@ export async function getFeaturedServiceTiles() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("services")
-    .select("slug, sort_order, image_url, service_prices(price_ngn, active)")
+    .select("slug, name, sort_order, image_url, service_prices(price_ngn, active)")
     .eq("active", true)
     .order("sort_order");
 
@@ -168,7 +168,7 @@ export async function getFeaturedServiceTiles() {
       : 0;
     return {
       slug: service.slug,
-      label: FEATURED_LABELS[service.slug] ?? service.slug,
+      label: FEATURED_LABELS[service.slug] ?? service.name ?? service.slug,
       from,
       imageUrl: service.image_url as string | null,
     };

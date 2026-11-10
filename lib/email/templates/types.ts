@@ -29,3 +29,9 @@ export type ContactMessageProps = {
   phone: string;
   message: string;
 };
+
+export type ContactReplyProps = {
+  name: string;
+  reply: string;
+  originalMessage: string;
+};

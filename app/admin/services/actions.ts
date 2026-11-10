@@ -28,6 +28,9 @@ export async function createService(formData: FormData) {
   });
   if (error) throw error;
   revalidatePath("/admin/services");
+  revalidatePath("/services");
+  revalidatePath("/book");
+  revalidatePath("/");
 }
 
 export async function updateService(serviceId: string, formData: FormData) {
@@ -137,6 +140,9 @@ export async function addServicePrice(serviceId: string, formData: FormData) {
   });
   if (error) throw error;
   revalidatePath("/admin/services");
+  revalidatePath("/services");
+  revalidatePath("/book");
+  revalidatePath("/");
 }
 
 export async function updateServicePrice(priceId: string, formData: FormData) {
@@ -152,6 +158,9 @@ export async function updateServicePrice(priceId: string, formData: FormData) {
     .eq("id", priceId);
   if (error) throw error;
   revalidatePath("/admin/services");
+  revalidatePath("/services");
+  revalidatePath("/book");
+  revalidatePath("/");
 }
 
 export async function createAddon(formData: FormData) {

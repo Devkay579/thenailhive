@@ -3,6 +3,7 @@ import { setMessageRead, markAllMessagesRead } from "@/app/admin/messages/action
 import { AdminCard } from "@/components/admin/ui";
 import { ActionForm } from "@/components/ui/ActionForm";
 import { Pagination } from "@/components/admin/Pagination";
+import { MessageReplyForm } from "@/components/admin/MessageReplyForm";
 import { cn } from "@/lib/cn";
 
 export default async function AdminMessagesPage({
@@ -84,7 +85,30 @@ export default async function AdminMessagesPage({
                     </p>
                   </div>
                   <p className="mt-2 whitespace-pre-wrap text-sm text-ink-950">{m.message}</p>
-                  <div className="mt-3">
+                  {m.replies.length > 0 ? (
+                    <div className="mt-3 space-y-2 border-l-2 border-blush-300 pl-3">
+                      {m.replies.map((r) => (
+                        <div key={r.id}>
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-wine-900">
+                            You replied
+                            {r.sentBy ? <span className="normal-case tracking-normal text-ink-700"> &middot; {r.sentBy}</span> : null}
+                            <span className="normal-case tracking-normal text-ink-700">
+                              {" "}&middot;{" "}
+                              {new Date(r.createdAt).toLocaleString("en-NG", {
+                                day: "numeric",
+                                month: "short",
+                                hour: "numeric",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </p>
+                          <p className="whitespace-pre-wrap text-sm text-ink-700">{r.body}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="mt-3 flex flex-wrap items-center gap-4">
+                    <MessageReplyForm messageId={m.id} name={m.name} email={m.email} />
                     <ActionForm
                       action={setMessageRead.bind(null, m.id, isUnread)}
                       successMessage={isUnread ? "Marked as read." : "Marked as unread."}
