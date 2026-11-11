@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "THENAILHIVE",
+  "short_name": "NailHive",
+  "description": "Book your THENAILHIVE nail appointment in a few taps.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fdf9f3",
+  "theme_color": "#4a1620",
+  "icons": [
+    { "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/pwa/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Book an appointment", "short_name": "Book", "url": "/book" },
+    { "name": "Gallery", "url": "/gallery" }
+  ]
+}

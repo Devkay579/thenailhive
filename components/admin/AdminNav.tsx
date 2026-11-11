@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { signOut } from "@/app/admin/login/actions";
 import { LogoMark } from "@/components/ui/Logo";
 import { cn } from "@/lib/cn";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 
 const GROUPS = [
   {
@@ -137,6 +138,7 @@ export function AdminSidebar({ badges }: { badges?: NavBadges }) {
         >
           View live site &nearr;
         </Link>
+        <InstallAppButton />
         <LogOut />
       </div>
     </aside>
@@ -184,7 +186,8 @@ export function AdminMobileNav({ badges }: { badges?: NavBadges }) {
             className="grain grain-light fixed inset-0 z-0 flex flex-col overflow-y-auto bg-wine-950 px-4 pb-8 pt-20"
           >
             <NavLinks onNavigate={() => setOpen(false)} badges={badges} />
-            <div className="mt-8">
+            <div className="mt-8 space-y-3">
+              <InstallAppButton />
               <LogOut />
             </div>
           </motion.div>

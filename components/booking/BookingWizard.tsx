@@ -13,6 +13,8 @@ import { ScheduleStep } from "./ScheduleStep";
 import { DetailsStep } from "./DetailsStep";
 import { ReviewStep } from "./ReviewStep";
 import { BookingSummary, computeTotals } from "./BookingSummary";
+import { ChosenLook } from "./ChosenLook";
+import type { GalleryLook } from "@/lib/data/gallery";
 import {
   STEPS,
   STEP_LABELS,
@@ -30,12 +32,18 @@ export function BookingWizard({
   addons,
   depositPercent,
   policyText,
+  look: initialLook = null,
 }: {
   services: BookableService[];
   addons: BookableAddon[];
   depositPercent: number;
   policyText: string;
+  /** Gallery design from a "Book this look" link (?look=<id>). */
+  look?: GalleryLook | null;
 }) {
+  // Held in client state: the ?look= param is dropped from the URL once the
+  // wizard starts moving between steps.
+  const [look, setLook] = useState(initialLook);
   const searchParams = useSearchParams();
   // "Book" links on the services/gallery pages pass ?service=<slug>, so start
   // with that service already chosen.
@@ -45,10 +53,10 @@ export function BookingWizard({
   const [startStep] = useState(() => startStepForService(services, state));
   const [draftId] = useState(() => crypto.randomUUID());
 
-  // Swap ?service=… for the step URL so browser Back from here returns to the
-  // page the client came from rather than re-applying the preselection.
+  // Swap ?service=…/?look=… for the step URL so browser Back from here returns
+  // to the page the client came from rather than re-applying the preselection.
   useEffect(() => {
-    if (searchParams.get("service") !== null) {
+    if (searchParams.get("service") !== null || searchParams.get("look") !== null) {
       window.history.replaceState(null, "", `/book?step=${startStep}`);
     }
   }, [searchParams, startStep]);
@@ -74,6 +82,9 @@ export function BookingWizard({
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:gap-14">
       <div className="min-w-0">
+        <AnimatePresence initial={false}>
+          {look ? <ChosenLook key={look.id} look={look} onRemove={() => setLook(null)} /> : null}
+        </AnimatePresence>
         <StepIndicator steps={STEPS.map((s) => STEP_LABELS[s])} activeIndex={stepIndex} />
 
         <AnimatePresence mode="wait" initial={false}>
@@ -98,6 +109,7 @@ export function BookingWizard({
                 addons={addons}
                 state={state}
                 depositPercent={depositPercent}
+                look={look}
                 onSlotTaken={() => goToStep(STEPS.indexOf("schedule"))}
               />
             )}

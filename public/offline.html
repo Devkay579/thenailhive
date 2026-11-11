@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#4a1620" />
+    <title>You're offline | THENAILHIVE</title>
+    <style>
+      html, body { margin: 0; height: 100%; }
+      body {
+        display: flex; align-items: center; justify-content: center;
+        padding: 24px; box-sizing: border-box;
+        background: #fdf9f3; color: #1c1416;
+        font-family: Georgia, "Times New Roman", serif; text-align: center;
+      }
+      .mark { width: 64px; height: 64px; margin: 0 auto 24px; }
+      h1 { margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.01em; }
+      h1 em { color: #4a1620; }
+      p { margin: 12px auto 28px; max-width: 22rem; font-family: system-ui, sans-serif; font-size: 15px; line-height: 1.6; color: #5b4c4f; }
+      button {
+        border: 0; padding: 12px 28px; cursor: pointer;
+        background: #4a1620; color: #fdf9f3;
+        font: 600 12px system-ui, sans-serif; letter-spacing: 0.2em; text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+        <rect width="48" height="48" rx="11" fill="#4a1620" />
+        <path d="M24 5.5 39.5 15v18L24 42.5 8.5 33V15Z" fill="none" stroke="#fdf9f3" stroke-width="2.6" stroke-linejoin="round" />
+        <path d="M24 16c-4 0-7 2.5-7 6.5S20 29 24 29s7-2.5 7-6.5S28 16 24 16Z" fill="#fdf9f3" />
+        <path d="M24 16v13M18.5 19.5h11M17.5 26h13" stroke="#4a1620" stroke-width="1.4" />
+      </svg>
+      <h1>You&rsquo;re <em>offline</em></h1>
+      <p>Check your data or Wi-Fi connection, then try again. Your booking details are safe.</p>
+      <button type="button" onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

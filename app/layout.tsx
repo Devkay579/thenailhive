@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Cormorant_Garamond, Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
+import { RegisterServiceWorker } from "@/components/pwa/RegisterServiceWorker";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_URL, pageMetadata } from "@/lib/site";
 
 const playfair = Playfair_Display({
@@ -28,6 +29,9 @@ export const metadata: Metadata = {
   // page that doesn't set one would claim to be the homepage.
   ...pageMetadata({ title: HOME_TITLE, description: HOME_DESCRIPTION, path: "/" }),
   alternates: undefined,
+  // Installable as a home-screen app. Admin pages swap in admin.webmanifest.
+  manifest: "/site.webmanifest",
+  appleWebApp: { capable: true, title: "NailHive", statusBarStyle: "default" },
 };
 
 // Explicit, rather than relying on Next's implicit default -- pins down
@@ -38,6 +42,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Browser chrome / installed-app title bar colour (wine-900).
+  themeColor: "#4a1620",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -48,6 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-cream-50 text-ink-950">
         {children}
+        <RegisterServiceWorker />
         <Toaster
           position="top-center"
           richColors

@@ -6,6 +6,7 @@ import { Kicker } from "@/components/ui/SectionHeading";
 import { BookingWizard } from "@/components/booking/BookingWizard";
 import { getBookableServices, getBookableAddons } from "@/lib/data/services";
 import { getBusinessInfo } from "@/lib/data/settings";
+import { getGalleryLook } from "@/lib/data/gallery";
 
 export const metadata: Metadata = pageMetadata({
   title: "Book an Appointment | THENAILHIVE",
@@ -13,11 +14,14 @@ export const metadata: Metadata = pageMetadata({
   path: "/book",
 });
 
-export default async function BookPage() {
-  const [services, addons, businessInfo] = await Promise.all([
+export default async function BookPage({ searchParams }: PageProps<"/book">) {
+  // "Book this look" links from the gallery pass ?look=<gallery item id>.
+  const { look: lookParam } = await searchParams;
+  const [services, addons, businessInfo, look] = await Promise.all([
     getBookableServices(),
     getBookableAddons(),
     getBusinessInfo(),
+    getGalleryLook(typeof lookParam === "string" ? lookParam : null),
   ]);
 
   return (
@@ -43,6 +47,7 @@ export default async function BookPage() {
               addons={addons}
               depositPercent={businessInfo.depositPercent}
               policyText={businessInfo.policyText}
+              look={look}
             />
           </Suspense>
         </Container>

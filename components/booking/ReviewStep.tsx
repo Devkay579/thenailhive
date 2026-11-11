@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { createBooking } from "@/app/book/actions";
 import { BookingSummary } from "./BookingSummary";
 import { StepHeading } from "./StepHeading";
+import type { GalleryLook } from "@/lib/data/gallery";
 import { findNextService, findServicePrice, type BookableAddon, type BookableService, type WizardState } from "./types";
 
 export function ReviewStep({
@@ -14,12 +15,14 @@ export function ReviewStep({
   addons,
   state,
   depositPercent,
+  look,
   onSlotTaken,
 }: {
   services: BookableService[];
   addons: BookableAddon[];
   state: WizardState;
   depositPercent: number;
+  look: GalleryLook | null;
   onSlotTaken: () => void;
 }) {
   const router = useRouter();
@@ -44,6 +47,7 @@ export function ReviewStep({
         email: state.email,
         instagram: state.instagram,
         inspirationPaths: state.inspirationUploads.map((u) => u.path),
+        galleryItemId: look?.id ?? null,
         policyAccepted: true,
         notes: state.notes,
       });
@@ -83,6 +87,12 @@ export function ReviewStep({
             <dd className="mt-0.5 truncate font-medium text-ink-950">{value}</dd>
           </div>
         ))}
+        {look ? (
+          <div>
+            <dt className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-700">Look</dt>
+            <dd className="mt-0.5 truncate font-medium text-ink-950">{look.title || look.category}</dd>
+          </div>
+        ) : null}
         {state.inspirationUploads.length > 0 ? (
           <div>
             <dt className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-700">Inspiration</dt>

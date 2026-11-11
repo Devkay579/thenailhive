@@ -5,6 +5,8 @@ import { LoginForm } from "@/components/admin/LoginForm";
 export const metadata: Metadata = {
   title: "Admin Login | THENAILHIVE",
   robots: { index: false, follow: false },
+  manifest: "/admin.webmanifest",
+  appleWebApp: { capable: true, title: "Studio Desk", statusBarStyle: "black" },
 };
 
 export default function AdminLoginPage() {

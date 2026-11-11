@@ -5,6 +5,9 @@ import { getUnreadContactMessageCount } from "@/lib/data/admin/contactMessages";
 export const metadata: Metadata = {
   title: "Studio Desk | THENAILHIVE",
   robots: { index: false, follow: false },
+  // Installs as its own "Studio Desk" app that opens straight into /admin.
+  manifest: "/admin.webmanifest",
+  appleWebApp: { capable: true, title: "Studio Desk", statusBarStyle: "black" },
 };
 
 // Every admin page reads live, frequently-changing data (bookings, settings,

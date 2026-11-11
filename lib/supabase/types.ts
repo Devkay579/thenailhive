@@ -79,6 +79,7 @@ export type BookingRow = {
   balance_ngn: number;
   status: BookingStatus;
   inspiration_image_urls: string[];
+  gallery_item_id: string | null;
   policy_accepted_at: string | null;
   deposit_paid_at: string | null;
   payment_method: PaymentMethod | null;

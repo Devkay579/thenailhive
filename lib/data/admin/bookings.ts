@@ -183,6 +183,8 @@ export type BookingDetail = BookingListRow & {
   depositPaidAt: string | null;
   paymentMethod: PaymentMethod | null;
   paymentReference: string | null;
+  /** The gallery design the client booked from ("Book this look"). */
+  chosenLook: { title: string; category: string; imageUrl: string | null; mediaType: "image" | "video" } | null;
 };
 
 export async function getBookingDetail(id: string): Promise<BookingDetail | null> {
@@ -191,7 +193,7 @@ export async function getBookingDetail(id: string): Promise<BookingDetail | null
   const { data: booking, error } = await supabase.from("bookings").select("*").eq("id", id).single();
   if (error || !booking) return null;
 
-  const [{ data: client }, { data: service }, { data: price }, { data: followup }, { data: addons }] = await Promise.all([
+  const [{ data: client }, { data: service }, { data: price }, { data: followup }, { data: addons }, { data: look }] = await Promise.all([
     supabase.from("clients").select("name, phone, email, instagram").eq("id", booking.client_id).single(),
     supabase.from("services").select("name").eq("id", booking.service_id).single(),
     booking.service_price_id
@@ -207,6 +209,13 @@ export async function getBookingDetail(id: string): Promise<BookingDetail | null
     booking.addon_ids?.length
       ? supabase.from("addons").select("name").in("id", booking.addon_ids)
       : Promise.resolve({ data: [] as { name: string }[] }),
+    booking.gallery_item_id
+      ? supabase
+          .from("gallery_items")
+          .select("title, category, image_url, media_type")
+          .eq("id", booking.gallery_item_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   let inspirationUrls: string[] = [];
@@ -248,6 +257,14 @@ export async function getBookingDetail(id: string): Promise<BookingDetail | null
     depositPaidAt: booking.deposit_paid_at ?? null,
     paymentMethod: booking.payment_method ?? null,
     paymentReference: booking.payment_reference ?? null,
+    chosenLook: look
+      ? {
+          title: look.title,
+          category: look.category,
+          imageUrl: look.image_url,
+          mediaType: look.media_type === "video" ? "video" : "image",
+        }
+      : null,
   };
 }
 

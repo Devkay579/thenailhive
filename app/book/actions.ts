@@ -16,6 +16,8 @@ const createBookingSchema = z.object({
   email: z.string().trim().email(),
   instagram: z.string().trim().max(60).optional().or(z.literal("")),
   inspirationPaths: z.array(z.string()).max(3).default([]),
+  // "Book this look": the gallery item the client booked from, if any.
+  galleryItemId: z.string().uuid().nullable().optional(),
   policyAccepted: z.literal(true),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
 });
@@ -93,6 +95,19 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
     addonTotal = addonRows.reduce((sum, a) => sum + a.price_ngn, 0);
   }
 
+  // A look that was hidden/deleted since the client opened the page shouldn't
+  // block the booking -- just drop the reference.
+  let galleryItemId: string | null = null;
+  if (data.galleryItemId) {
+    const { data: look } = await supabase
+      .from("gallery_items")
+      .select("id")
+      .eq("id", data.galleryItemId)
+      .eq("active", true)
+      .maybeSingle();
+    galleryItemId = look?.id ?? null;
+  }
+
   const { data: settings } = await supabase
     .from("settings")
     .select("deposit_percent")
@@ -145,6 +160,8 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
       balance_ngn: balance,
       status: "pending_payment",
       inspiration_image_urls: data.inspirationPaths,
+      // Only sent when set, so ordinary bookings don't depend on the column.
+      ...(galleryItemId ? { gallery_item_id: galleryItemId } : {}),
       policy_accepted_at: new Date().toISOString(),
       notes: data.notes || null,
     })

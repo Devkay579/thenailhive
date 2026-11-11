@@ -370,3 +370,9 @@ set
     'video/mp4', 'video/webm', 'video/quicktime'
   ]
 where id = 'gallery-photos';
+
+-- "Book this look": the gallery design a client tapped before booking, so the
+-- studio knows exactly which set they want. Kept nullable (most bookings
+-- don't start from the gallery) and cleared if the gallery item is deleted.
+alter table bookings add column if not exists gallery_item_id uuid
+  references gallery_items(id) on delete set null;

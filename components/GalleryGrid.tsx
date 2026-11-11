@@ -39,7 +39,9 @@ const CATEGORY_SERVICE: Partial<Record<GalleryCategory, string>> = {
 
 function bookHref(item: GalleryGridItem) {
   const slug = item.serviceSlug || CATEGORY_SERVICE[item.category];
-  return slug ? `/book?service=${slug}` : "/book";
+  const params = new URLSearchParams({ look: item.id });
+  if (slug) params.set("service", slug);
+  return `/book?${params}`;
 }
 
 export function GalleryGrid({ items: allItems }: { items: GalleryGridItem[] }) {

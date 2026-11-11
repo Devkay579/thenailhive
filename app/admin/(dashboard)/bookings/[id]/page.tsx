@@ -72,6 +72,38 @@ export default async function AdminBookingDetailPage({
         </AdminCard>
       </div>
 
+      {booking.chosenLook && (
+        <AdminCard title="Chosen Look">
+          <div className="flex items-center gap-4">
+            {booking.chosenLook.imageUrl ? (
+              booking.chosenLook.mediaType === "video" ? (
+                <video
+                  src={booking.chosenLook.imageUrl}
+                  controls
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="h-28 w-28 rounded-lg border border-ink-950/10 object-cover"
+                />
+              ) : (
+                <a
+                  href={booking.chosenLook.imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative h-28 w-28 shrink-0 overflow-hidden rounded-lg border border-ink-950/10"
+                >
+                  <Image src={booking.chosenLook.imageUrl} alt={booking.chosenLook.title || "Chosen look"} fill sizes="112px" className="object-cover" />
+                </a>
+              )
+            ) : null}
+            <div className="text-sm">
+              <p className="font-medium text-ink-950">{booking.chosenLook.title || booking.chosenLook.category}</p>
+              <p className="text-ink-700">{booking.chosenLook.category} &middot; booked from the gallery</p>
+            </div>
+          </div>
+        </AdminCard>
+      )}
+
       {booking.inspirationUrls.length > 0 && (
         <AdminCard title="Inspiration Photos">
           <div className="flex flex-wrap gap-3">
