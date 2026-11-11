@@ -54,22 +54,23 @@ function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
  * long the service takes:
  * - every grid time from opening up to (not including) closing is offered,
  *   even if the appointment would run past closing;
- * - an existing booking only takes its own start time -- a 60-min set at 2:00
- *   leaves 2:30 open. Anything the studio can't take, the admin blocks under
- *   Availability (blocked slots hide every start time they cover).
+ * - an existing booking hides every start time it covers -- a 60-min set at
+ *   2:00 hides 2:00 and 2:30, leaving 3:00 open. Anything else the studio
+ *   can't take, the admin blocks under Availability (blocked slots likewise
+ *   hide every start time they cover).
  */
 export function computeAvailableSlots({
   businessHours,
   blockedIntervals,
-  bookedStartTimes,
+  bookedIntervals,
   durationMinutes,
   slotIntervalMinutes = 30,
   minStartMinutes,
 }: {
   businessHours: BusinessHoursInput;
   blockedIntervals: TimeInterval[];
-  /** Start times ("HH:MM:SS") of the day's active bookings. */
-  bookedStartTimes: string[];
+  /** Start/end times ("HH:MM:SS") of the day's active bookings. */
+  bookedIntervals: TimeInterval[];
   /** Only used to label each slot's end time; it never removes a slot. */
   durationMinutes: number;
   slotIntervalMinutes?: number;
@@ -83,7 +84,12 @@ export function computeAvailableSlots({
   const openMinutes = toMinutes(businessHours.open_time);
   const closeMinutes = toMinutes(businessHours.close_time);
   const blocked = blockedIntervals.map((b) => ({ start: toMinutes(b.start), end: toMinutes(b.end) }));
-  const bookedStarts = bookedStartTimes.map(toMinutes);
+  const booked = bookedIntervals.map((b) => {
+    const start = toMinutes(b.start);
+    // Guard against a missing/zero-length end so the start cell is still taken.
+    const end = Math.max(toMinutes(b.end), start + 1);
+    return { start, end };
+  });
 
   const slots: Slot[] = [];
   const earliestStart = Math.max(openMinutes, minStartMinutes ?? openMinutes);
@@ -98,17 +104,26 @@ export function computeAvailableSlots({
 
   for (let start = gridStart; start < closeMinutes; start += slotIntervalMinutes) {
     const cellEnd = start + slotIntervalMinutes;
-    // A block hides any start time inside it (a 14:00-15:00 block hides 14:00
-    // and 14:30). A booking hides the grid cell its start time falls in, which
-    // also covers admin bookings made at off-grid times like 14:15.
+    // Blocks and bookings hide every grid cell they touch (a 14:00-15:00 block
+    // or booking hides 14:00 and 14:30). Using cell overlap also covers admin
+    // bookings made at off-grid times like 14:15.
     const isBlocked = blocked.some((b) => overlaps(start, cellEnd, b.start, b.end));
-    const isBooked = bookedStarts.some((b) => b >= start && b < cellEnd);
+    const isBooked = booked.some((b) => overlaps(start, cellEnd, b.start, b.end));
     if (!isBlocked && !isBooked) {
       slots.push({ start: toTimeString(start), end: toTimeString(start + durationMinutes) });
     }
   }
 
   return slots;
+}
+
+/** True if `time` ("HH:MM[:SS]") falls inside any of the given bookings. */
+export function isTimeInsideBooking(time: string, bookings: TimeInterval[]) {
+  const t = toMinutes(time);
+  return bookings.some((b) => {
+    const start = toMinutes(b.start);
+    return t >= start && t < Math.max(toMinutes(b.end), start + 1);
+  });
 }
 
 /** Postgres error codes meaning "that start time is already taken":

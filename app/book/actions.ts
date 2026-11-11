@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBookingAdminNotification, sendBookingReceivedEmail } from "@/lib/email/send";
-import { isSlotTakenError } from "@/lib/availability";
+import { isSlotTakenError, isTimeInsideBooking } from "@/lib/availability";
 
 const createBookingSchema = z.object({
   servicePriceId: z.string().uuid(),
@@ -125,6 +125,21 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
     startTime,
     servicePrice.duration_minutes + (nextServicePrice?.duration_minutes ?? 0),
   );
+
+  // The calendar hides times inside existing bookings, but a page left open
+  // can still submit one -- reject it here before creating anything.
+  const { data: sameDay } = await supabase
+    .from("bookings")
+    .select("start_time, end_time")
+    .eq("booking_date", data.date)
+    .not("status", "in", "(cancelled,no_show)");
+  if (isTimeInsideBooking(startTime, (sameDay ?? []).map((b) => ({ start: b.start_time, end: b.end_time })))) {
+    return {
+      ok: false,
+      error: "slot_taken",
+      message: "That time was just booked by someone else. Please pick another slot.",
+    };
+  }
 
   const { data: client, error: clientError } = await supabase
     .from("clients")
