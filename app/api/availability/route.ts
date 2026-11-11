@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     supabase.from("blocked_slots").select("start_time, end_time").eq("date", date),
     supabase
       .from("bookings")
-      .select("start_time, end_time")
+      .select("start_time")
       .eq("booking_date", date)
       .not("status", "in", "(cancelled,no_show)"),
   ]);
@@ -70,10 +70,7 @@ export async function GET(request: NextRequest) {
     ? []
     : (blocked ?? []).map((b) => ({ start: b.start_time!, end: b.end_time! }));
 
-  const bookedIntervals: TimeInterval[] = (bookings ?? []).map((b) => ({
-    start: b.start_time,
-    end: b.end_time,
-  }));
+  const bookedStartTimes = (bookings ?? []).map((b) => b.start_time);
 
   const isToday = date === todayInLagos();
   const minStartMinutes = isToday
@@ -90,7 +87,7 @@ export async function GET(request: NextRequest) {
       is_closed: hours.is_closed || wholeDayBlocked,
     },
     blockedIntervals,
-    bookedIntervals,
+    bookedStartTimes,
     durationMinutes,
     minStartMinutes,
   });

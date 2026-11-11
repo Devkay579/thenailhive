@@ -22,6 +22,11 @@ export default async function AdminAvailabilityPage({
       <h1 className="font-display text-3xl font-semibold tracking-tight text-ink-950 sm:text-4xl">Availability</h1>
 
       <AdminCard title="Weekly Hours">
+        <p className="mb-4 text-xs leading-relaxed text-ink-700">
+          Clients can pick any half-hour start time from opening until 30 minutes before closing, whatever the
+          service length. A booking only takes its own start time, so if you can&apos;t take someone in the slots
+          straight after it, block those times below.
+        </p>
         <ActionForm action={updateBusinessHours} successMessage="Hours updated." className="space-y-3">
           {WEEKDAYS.map((label, weekday) => {
             const h = hoursByDay.get(weekday);

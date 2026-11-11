@@ -376,3 +376,13 @@ where id = 'gallery-photos';
 -- don't start from the gallery) and cleared if the gallery item is deleted.
 alter table bookings add column if not exists gallery_item_id uuid
   references gallery_items(id) on delete set null;
+
+-- Admin-controlled diary: bookings may now overlap (a 60-min set at 2:00 no
+-- longer blocks 2:30 -- the admin blocks time they can't take instead). The
+-- only rule Postgres still enforces is one active booking per start time, so
+-- two clients can't grab the same slot at the same moment.
+-- Replaces bookings_no_overlap above; the time_range column is kept as-is.
+alter table bookings drop constraint if exists bookings_no_overlap;
+create unique index if not exists bookings_unique_start
+  on bookings (booking_date, start_time)
+  where (status not in ('cancelled', 'no_show'));

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBookingAdminNotification, sendBookingReceivedEmail } from "@/lib/email/send";
+import { isSlotTakenError } from "@/lib/availability";
 
 const createBookingSchema = z.object({
   servicePriceId: z.string().uuid(),
@@ -169,8 +170,8 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
     .single();
 
   if (bookingError) {
-    // 23P01 = exclusion_violation -> the time_range overlap constraint fired.
-    if (bookingError.code === "23P01") {
+    // Someone else took this start time between loading slots and confirming.
+    if (isSlotTakenError(bookingError.code)) {
       return {
         ok: false,
         error: "slot_taken",

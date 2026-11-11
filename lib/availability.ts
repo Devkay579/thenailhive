@@ -47,17 +47,30 @@ function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
   return aStart < bEnd && bStart < aEnd;
 }
 
+/**
+ * Start times offered on the booking calendar.
+ *
+ * The admin is in full control of the diary, so slots deliberately ignore how
+ * long the service takes:
+ * - every grid time from opening up to (not including) closing is offered,
+ *   even if the appointment would run past closing;
+ * - an existing booking only takes its own start time -- a 60-min set at 2:00
+ *   leaves 2:30 open. Anything the studio can't take, the admin blocks under
+ *   Availability (blocked slots hide every start time they cover).
+ */
 export function computeAvailableSlots({
   businessHours,
   blockedIntervals,
-  bookedIntervals,
+  bookedStartTimes,
   durationMinutes,
   slotIntervalMinutes = 30,
   minStartMinutes,
 }: {
   businessHours: BusinessHoursInput;
   blockedIntervals: TimeInterval[];
-  bookedIntervals: TimeInterval[];
+  /** Start times ("HH:MM:SS") of the day's active bookings. */
+  bookedStartTimes: string[];
+  /** Only used to label each slot's end time; it never removes a slot. */
   durationMinutes: number;
   slotIntervalMinutes?: number;
   /** If set (e.g. "now" for a same-day request), no slot starts before this. */
@@ -69,10 +82,8 @@ export function computeAvailableSlots({
 
   const openMinutes = toMinutes(businessHours.open_time);
   const closeMinutes = toMinutes(businessHours.close_time);
-  const busy = [...blockedIntervals, ...bookedIntervals].map((b) => ({
-    start: toMinutes(b.start),
-    end: toMinutes(b.end),
-  }));
+  const blocked = blockedIntervals.map((b) => ({ start: toMinutes(b.start), end: toMinutes(b.end) }));
+  const bookedStarts = bookedStartTimes.map(toMinutes);
 
   const slots: Slot[] = [];
   const earliestStart = Math.max(openMinutes, minStartMinutes ?? openMinutes);
@@ -80,24 +91,30 @@ export function computeAvailableSlots({
   // Keep same-day slots on the same clean grid as every other day (open_time,
   // open_time + 30, ...). Without this, a "now + lead time" cutoff like
   // 16:18 becomes the loop's start value directly, producing odd slot times
-  // (4:18, 4:48, ...) instead of the usual :00/:30 grid -- and can even waste
-  // enough of the last slot's room that a service that would otherwise fit
-  // before closing time doesn't.
+  // (4:18, 4:48, ...) instead of the usual :00/:30 grid.
   const offsetFromOpen = earliestStart - openMinutes;
   const alignedOffset = Math.ceil(offsetFromOpen / slotIntervalMinutes) * slotIntervalMinutes;
   const gridStart = openMinutes + alignedOffset;
 
-  for (
-    let start = gridStart;
-    start + durationMinutes <= closeMinutes;
-    start += slotIntervalMinutes
-  ) {
-    const end = start + durationMinutes;
-    const clash = busy.some((b) => overlaps(start, end, b.start, b.end));
-    if (!clash) {
-      slots.push({ start: toTimeString(start), end: toTimeString(end) });
+  for (let start = gridStart; start < closeMinutes; start += slotIntervalMinutes) {
+    const cellEnd = start + slotIntervalMinutes;
+    // A block hides any start time inside it (a 14:00-15:00 block hides 14:00
+    // and 14:30). A booking hides the grid cell its start time falls in, which
+    // also covers admin bookings made at off-grid times like 14:15.
+    const isBlocked = blocked.some((b) => overlaps(start, cellEnd, b.start, b.end));
+    const isBooked = bookedStarts.some((b) => b >= start && b < cellEnd);
+    if (!isBlocked && !isBooked) {
+      slots.push({ start: toTimeString(start), end: toTimeString(start + durationMinutes) });
     }
   }
 
   return slots;
+}
+
+/** Postgres error codes meaning "that start time is already taken":
+ * 23505 = unique_violation on bookings_unique_start (current rule);
+ * 23P01 = exclusion_violation from the old bookings_no_overlap constraint,
+ * still possible until the schema.sql migration has been run. */
+export function isSlotTakenError(code: string | undefined | null) {
+  return code === "23505" || code === "23P01";
 }

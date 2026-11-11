@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBookingAdminNotification, sendBookingConfirmedEmail, sendBookingReceivedEmail } from "@/lib/email/send";
 import type { BookingStatus } from "@/lib/supabase/types";
+import { isSlotTakenError } from "@/lib/availability";
 
 export type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -123,7 +124,7 @@ export async function rescheduleBooking(
     .eq("id", bookingId);
 
   if (error) {
-    if (error.code === "23P01") {
+    if (isSlotTakenError(error.code)) {
       return { ok: false, message: "That time slot is already booked." };
     }
     return { ok: false, message: "Could not reschedule the booking." };
@@ -286,7 +287,7 @@ export async function createAdminBooking(
     .single();
 
   if (error || !booking) {
-    if (error?.code === "23P01") return { ok: false, message: "That time overlaps another booking." };
+    if (isSlotTakenError(error?.code)) return { ok: false, message: "Another booking already starts at that time." };
     return { ok: false, message: "Could not create the booking." };
   }
 
@@ -352,7 +353,7 @@ export async function updateAdminBooking(
     .eq("id", bookingId);
 
   if (error) {
-    if (error.code === "23P01") return { ok: false, message: "That time overlaps another booking." };
+    if (isSlotTakenError(error.code)) return { ok: false, message: "Another booking already starts at that time." };
     return { ok: false, message: "Could not save the booking." };
   }
 
