@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { getBusinessInfo } from "@/lib/data/settings";
 
 function buildSocials(businessInfo: Awaited<ReturnType<typeof getBusinessInfo>>) {
@@ -78,6 +79,7 @@ export async function Footer() {
                 </span>
               </Link>
             </div>
+            <InstallAppButton variant="footer" label="Install the NailHive app" className="mt-5" />
           </div>
 
           <nav aria-label="Footer" className="flex flex-col gap-2.5 text-sm">

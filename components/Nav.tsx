@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { cn } from "@/lib/cn";
 
 const LINKS = [
@@ -116,6 +117,7 @@ export function Nav() {
               <Button href="/book" variant="light" size="lg" onClick={() => setOpen(false)}>
                 Book an Appointment
               </Button>
+              <InstallAppButton variant="menu" label="Install the NailHive app" />
             </motion.div>
           </motion.nav>
         ) : null}
@@ -149,7 +151,8 @@ export function Nav() {
           })}
         </nav>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-3 md:flex">
+          <InstallAppButton variant="nav" label="Get the app" />
           <Button href="/book" size="sm">
             Book Now
           </Button>

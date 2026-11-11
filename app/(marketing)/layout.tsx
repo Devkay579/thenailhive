@@ -1,6 +1,7 @@
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { MobileBookBar } from "@/components/MobileBookBar";
+import { InstallBanner } from "@/components/pwa/InstallBanner";
 
 export default function MarketingLayout({
   children,
@@ -13,6 +14,7 @@ export default function MarketingLayout({
       <main className="flex-1 pb-20 md:pb-0">{children}</main>
       <Footer />
       <MobileBookBar />
+      <InstallBanner />
     </div>
   );
 }
