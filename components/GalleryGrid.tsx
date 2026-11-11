@@ -115,7 +115,7 @@ export function GalleryGrid({ items: allItems }: { items: GalleryGridItem[] }) {
                     )}
                     <Link
                       href={bookHref(item)}
-                      className="absolute inset-x-0 bottom-0 translate-y-full bg-wine-900 py-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-cream-50 transition-transform duration-300 focus:translate-y-0 group-hover:translate-y-0"
+                      className="look-cta absolute inset-x-0 bottom-0 bg-wine-900/90 py-1.5 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-cream-50 backdrop-blur-[2px] sm:py-2 sm:text-xs sm:tracking-[0.2em]"
                     >
                       Book this look
                     </Link>
